@@ -9,7 +9,7 @@ A very rudimentary error and exception handler for PHP 5.4 and above.
 ## Example
 ```php
 <?php
-require('handler.php');
+require('errorexceptionhandler.php');
 
 function test() {
 
