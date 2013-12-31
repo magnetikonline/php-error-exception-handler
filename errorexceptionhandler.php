@@ -64,5 +64,6 @@ class ErrorExceptionHandler {
 }
 
 
+// register error and exception handlers
 set_error_handler('ErrorExceptionHandler::error');
 set_exception_handler('ErrorExceptionHandler::exception');
