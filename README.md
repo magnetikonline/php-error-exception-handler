@@ -3,7 +3,7 @@ A very rudimentary error and exception handler for PHP 5.4 and above.
 
 - When caught, error/exception message is echoed back along with an easy to read stack trace.
 - New lines are converted to `<br />` for any [SAPI](http://www.php.net/php_sapi_name) type *other* than `cli`.
-- Execution is simply halted afterwards - PHP automatically [stops execution](http://www.php.net/manual/en/function.set-exception-handler.php) after Exceptions handled by `set_exception_handler()` anyway.
+- Execution is simply halted afterwards - PHP automatically [stops execution](http://www.php.net/manual/en/function.set-exception-handler.php) after exceptions handled by `set_exception_handler()` regardless.
 - Future enhancements could include friendly error messages for end users in production and/or logging to file/datastore for caught errors. An exercise for another day, but for now this works well for my development.
 
 ## Example

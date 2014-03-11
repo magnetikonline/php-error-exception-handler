@@ -3,12 +3,8 @@ class ErrorExceptionHandler {
 
 	public static function error($errorNumber,$message) {
 
-		// skip first item, will be the call to static::error()
-		$stackTraceList = debug_backtrace();
-		array_shift($stackTraceList);
-
 		// build message and halt execution
-		static::buildMessage('Error',$message,$stackTraceList);
+		static::buildMessage('Error',$message,debug_backtrace());
 		exit();
 	}
 
