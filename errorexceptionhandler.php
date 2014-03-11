@@ -31,6 +31,7 @@ class ErrorExceptionHandler {
 		$message =
 			sprintf("\n\n%s: %s\n\n",$type,$message) .
 			static::buildMessageBacktrace($stackTraceList) .
+			static::buildMessageHTTPRequest() .
 			"\n\n";
 
 		// output, with <br /> if not in CLI mode
@@ -64,6 +65,33 @@ class ErrorExceptionHandler {
 		}
 
 		return implode("\n",$messageList);
+	}
+
+	private static function buildMessageHTTPRequest() {
+
+		// no work if CLI mode
+		if (PHP_SAPI == 'cli') return '';
+
+		// request URI
+		$messageList = ['Request URI: ' . $_SERVER['REQUEST_URI']];
+
+		// POST data
+		if ($_POST) {
+			array_push($messageList,'','POST data:');
+			foreach ($_POST as $key => $value) {
+				$messageList[] = sprintf('\'%s\' => %s',$key,$value);
+			}
+		}
+
+		// SESSION data
+		if (isset($_SESSION) && $_SESSION) {
+			array_push($messageList,'','SESSION data:');
+			foreach ($_SESSION as $key => $value) {
+				$messageList[] = sprintf('\'%s\' => %s',$key,$value);
+			}
+		}
+
+		return "\n\n" . implode("\n",$messageList);
 	}
 }
 
