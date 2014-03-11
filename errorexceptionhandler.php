@@ -3,25 +3,26 @@ class ErrorExceptionHandler {
 
 	public static function error($errorNumber,$message) {
 
-		// build message and halt execution
+		// build error message and halt execution
 		static::buildMessage('Error',$message,debug_backtrace());
 		exit();
 	}
 
 	public static function exception(Exception $exception) {
 
-		// build complete exception stack trace
-		$stackTraceList = array_merge(
-			[[
-				'function' => 'Exception',
-				'file' => $exception->getFile(),
-				'line' => $exception->getLine()
-			]],
-			$exception->getTrace()
+		// build exception message - execution will halt at this point
+		static::buildMessage(
+			'Exception',$exception->getMessage(),
+			// build complete exception stack trace
+			array_merge(
+				[[
+					'function' => 'Exception',
+					'file' => $exception->getFile(),
+					'line' => $exception->getLine()
+				]],
+				$exception->getTrace()
+			)
 		);
-
-		// build message - execution will halt at this point
-		static::buildMessage('Exception',$exception->getMessage(),$stackTraceList);
 	}
 
 	private static function buildMessage($type,$message,array $stackTraceList) {
@@ -45,13 +46,20 @@ class ErrorExceptionHandler {
 
 		foreach ($stackTraceList as $stackTraceItem) {
 			// add message line
+			$fileName = (isset($stackTraceItem['file']))
+				? substr($stackTraceItem['file'],$baseApplicationDirLength) // strip redundant start of file path
+				: false;
+
+			$lineNumber = (isset($stackTraceItem['line']))
+				? $stackTraceItem['line']
+				: false;
+
 			$messageList[] = sprintf(
-				'#%s %s%s() at [%s:%d]',
+				'#%s %s%s()' . ((($fileName !== false) && ($lineNumber !== false)) ? ' at [%s:%d]' : ''),
 				str_pad($stackCount++,4,' '), // stack trace item number, padded
 				(isset($stackTraceItem['type'])) ? $stackTraceItem['class'] . $stackTraceItem['type'] : '', // calling class details
 				$stackTraceItem['function'],
-				substr($stackTraceItem['file'],$baseApplicationDirLength), // strip redundant start of file path
-				$stackTraceItem['line'] // line number
+				$fileName,$lineNumber
 			);
 		}
 
