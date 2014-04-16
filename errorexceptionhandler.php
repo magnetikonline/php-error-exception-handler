@@ -4,7 +4,11 @@ class ErrorExceptionHandler {
 	public static function error($errorNumber,$message) {
 
 		// build error message and halt execution
-		static::buildMessage('Error',$message,debug_backtrace());
+		static::buildMessage(
+			'Error',$message,
+			array_slice(debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS),1)
+		);
+
 		exit();
 	}
 
@@ -16,7 +20,7 @@ class ErrorExceptionHandler {
 			// build complete exception stack trace
 			array_merge(
 				[[
-					'function' => 'Exception',
+					'function' => get_class($exception),
 					'file' => $exception->getFile(),
 					'line' => $exception->getLine()
 				]],
