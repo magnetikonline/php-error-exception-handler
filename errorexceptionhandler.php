@@ -6,7 +6,7 @@ class ErrorExceptionHandler {
 		// build error message and halt execution
 		static::buildMessage(
 			'Error',$message,
-			array_slice(debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS),1)
+			debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS)
 		);
 
 		exit();
