@@ -1,6 +1,15 @@
 <?php
 class ErrorExceptionHandler {
 
+	const EMAIL_MESSAGE_LINE_LENGTH = 70;
+
+	private static $HTTPUserMessage = false;
+	private static $logFilePath = false;
+	private static $emailFrom = false;
+	private static $emailTo;
+	private static $emailSubject;
+
+
 	public static function error($errorNumber,$message) {
 
 		// build error message and halt execution
@@ -29,17 +38,51 @@ class ErrorExceptionHandler {
 		);
 	}
 
+	public static function setHTTPUserMessage($message) {
+
+		static::$HTTPUserMessage = $message;
+	}
+
+	public static function setLogFilePath($path) {
+
+		static::$logFilePath = $path;
+	}
+
+	public static function setEmailSend($from,$to,$subject) {
+
+		static::$emailFrom = $from;
+		static::$emailTo = $to;
+		static::$emailSubject = $subject;
+	}
+
 	private static function buildMessage($type,$message,array $stackTraceList) {
 
 		// build error message and backtrace
 		$message =
-			sprintf("\n\n%s: %s\n\n",$type,$message) .
+			$type . ': ' . $message . "\n\n" .
 			static::buildMessageBacktrace($stackTraceList) .
 			static::buildMessageHTTPRequest() .
-			"\n\n";
+			"\n";
 
-		// output, with <br /> if not in CLI mode
-		echo((PHP_SAPI == 'cli') ? $message : nl2br($message));
+		// log message to disk and/or email send
+		$messageDateTime = 'Date: ' . date('Y-m-d H:i:s') . "\n";
+		static::logMessage($messageDateTime . $message);
+		static::sendMessageAsEmail($messageDateTime . $message);
+
+		// emit message to CLI/browser
+		$message = "\n\n" . $message . "\n\n";
+
+		if (PHP_SAPI == 'cli') {
+			echo($message);
+
+		} else {
+			// HTTP request
+			echo(nl2br(
+				(static::$HTTPUserMessage === false)
+					? $message
+					: static::$HTTPUserMessage
+			));
+		}
 	}
 
 	private static function buildMessageBacktrace(array $stackTraceList) {
@@ -76,8 +119,8 @@ class ErrorExceptionHandler {
 		// no work if CLI mode
 		if (PHP_SAPI == 'cli') return '';
 
-		// request URI
-		$messageList = ['Request URI: ' . $_SERVER['REQUEST_URI']];
+		// request URI (empty entries for line breaks)
+		$messageList = ['','','Request URI: ' . $_SERVER['REQUEST_URI']];
 
 		// POST data
 		if ($_POST) {
@@ -95,7 +138,39 @@ class ErrorExceptionHandler {
 			}
 		}
 
-		return "\n\n" . implode("\n",$messageList);
+		return implode("\n",$messageList);
+	}
+
+	private static function logMessage($message) {
+
+		if (static::$logFilePath === false) return;
+
+		// open log file and obtain lock
+		$fh = fopen(static::$logFilePath,'a');
+
+		if (flock($fh,LOCK_EX)) {
+			// got the file lock - write message and release lock
+			fwrite($fh,$message . "\n\n");
+			flock($fh,LOCK_UN);
+		}
+
+		fclose($fh);
+	}
+
+	private static function sendMessageAsEmail($message) {
+
+		if (static::$emailFrom === false) return;
+
+		mail(
+			static::$emailTo,
+			static::$emailSubject,
+			wordwrap(
+				str_replace("\r\n","\n",$message),
+				self::EMAIL_MESSAGE_LINE_LENGTH
+			),
+			'From: ' . static::$emailFrom,
+			'-f <' . static::$emailFrom . '>'
+		);
 	}
 }
 
